@@ -11,11 +11,9 @@ import logging
 # 读取yaml文件
 with open("Reply.yml", "r+", encoding="UTF-8") as reply_file, \
         open("SSR_Lesson_Command.yml", "r+", encoding="UTF-8") as ssr_lesson_command_file, \
-        open("command.yaml", "r+", encoding="UTF-8") as ordinary_command_file,\
         open("config.yaml", 'r+', encoding='UTF-8') as token_file:
     reply_msg_dic = yaml.load(reply_file, Loader=yaml.FullLoader)
     ssr_lesson_command = yaml.load(ssr_lesson_command_file, Loader=yaml.FullLoader)
-    ordinary_command = yaml.load(ordinary_command_file, Loader=yaml.FullLoader)
     bot_token = yaml.load(token_file, Loader=yaml.FullLoader)
 
 TOKEN = bot_token['TOKEN']
