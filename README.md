@@ -27,4 +27,14 @@
 >    - replywords2
 > ```
 > 
-> 最后添加代理执行`python Bot1.py即可`
+> 最后添加代理执行`python Bot1.py`即可
+
+- 目前还支持ssr教程回复，如果没有需要请把相关代码删除。
+
+## @avimitin_forward_bot
+
+- 机器人地址: https://t.me/avimitin_forward_bot
+- 机器人目前功能：转发信息到我UID里
+- 机器人依赖：`PyTelegramBotAPI`
+- 机器人特性：普通的转发机器人。
+
