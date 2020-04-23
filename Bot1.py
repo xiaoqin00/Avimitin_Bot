@@ -6,17 +6,15 @@ from telebot import types
 import random
 import yaml
 import regexp_search
-import timer
-import add_message
+import re
 import time
 import weather
 import json
+
 # 从config文件读取token
 with open("config.yaml", 'r+', encoding='UTF-8') as token_file:
     bot_token = yaml.load(token_file, Loader=yaml.FullLoader)
-
 TOKEN = bot_token['TOKEN']
-
 
 # 实例化机器人
 bot = telebot.TeleBot(TOKEN)
@@ -44,17 +42,12 @@ def reply_msg(message):
 # 命令返回语句
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "咱是个可爱的回话机器人，目前功能只有：\n")
+    bot.reply_to(message, "咱是个可爱的回话机器人，目前功能只有：\n/help /closemenu /add /weather /lesson")
 
 
 @bot.message_handler(commands=['help'])
 def send_help(message):
     bot.send_message(message.chat.id, "你需要什么帮助？随便提，反正我帮不上忙")
-
-
-@bot.message_handler(commands=['timer'])
-def send_timer(message):
-    timer.get_time(message)
 
 
 @bot.message_handler(commands=['closemenu'])
@@ -65,87 +58,25 @@ def close_menu(message):
 
 # 关键词添加程序
 @bot.message_handler(commands=['add'])
-def add_msg(message):
-    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    item_yes = types.KeyboardButton("是")
-    item_no = types.KeyboardButton("否")
-    markup.row(item_yes, item_no)
-    bot.send_message(message.chat.id, "是否要启动关键词添加程序？", reply_markup=markup)
-    bot.register_next_step_handler(message, startup_add)
-
-
-def startup_add(message):
-    if message.text == "是":
-        markup = types.ForceReply(selective=False)
-        bot.send_message(message.chat.id, '输入关键词', reply_markup=markup)
-        bot.register_next_step_handler(message, add_keyword)
-    else:
-        markup2 = types.ReplyKeyboardRemove(selective=False)
-        bot.send_message(message.chat.id, "程序关闭", reply_markup=markup2)
-
-
 def add_keyword(message):
-    bot.send_message(message.chat.id, '收到关键字')
-    keyword = message.text
-    # 将收到的消息加入关键词类里
-    add_message.BotsKeyword.change_keyword(keyword)
-    # 测试是否修改成功
-    pre_keyword = add_message.BotsKeyword.get_keyword()
-    bot.send_message(message.chat.id, '你输入的关键词是' + pre_keyword)
-
-    markup = types.ForceReply(selective=False)
-    bot.send_message(message.chat.id, '输入回复的内容', reply_markup=markup)
-
-    bot.register_next_step_handler(message, add_value_word)
-
-
-def add_value_word(message):
-    bot.send_message(message.chat.id, '收到回复语')
-    value_word = message.text
-
-    add_message.BotsKeyword.change_value(value_word)
-    pre_value_word = add_message.BotsKeyword.get_value_word()
-    bot.send_message(message.chat.id, '你输入的回复语是' + pre_value_word)
-    pre_keyword = add_message.BotsKeyword.get_keyword()
-    bot.send_message(message.chat.id, '请再次确认字典:当有人提到'+pre_keyword+'时我则会回复'+pre_value_word)
-    time.sleep(1)
-
-    markup = types.ReplyKeyboardMarkup(selective=False)
-    item_y = types.KeyboardButton('是')
-    item_n = types.KeyboardButton('否')
-    markup.row(item_y, item_n)
-    bot.send_message(message.chat.id, '是否保存?', reply_markup=markup)
-
-    bot.register_next_step_handler(message, add_in_dic)
-
-
-def add_in_dic(message):
-    if message.text == '是':
-        bot.send_message(message.chat.id, "保存中")
-        time.sleep(1)
-        add_message.BotsKeyword.set_value()
-        bot.send_message(message.chat.id, '保存完毕')
-    elif message.text == '否':
-        markup = types.ReplyKeyboardMarkup(selective=False)
-        item_y = types.KeyboardButton('是')
-        item_n = types.KeyboardButton('否')
-        markup.row(item_y, item_n)
-        bot.send_message(message.chat.id, "取消保存，是否重新开始录入？", reply_markup=markup)
-        bot.register_next_step_handler(message, reload)
+    if message.chat.username != 'SaiToAsuKa_kksk':
+        bot.send_message(message.chat.id, '你不是我老公，爬')
     else:
-        bot.send_message(message.chat.id, '请使用正确按键！程序重启！')
-        add_msg(message)
+        if len(message.text) == 4:
+            bot.send_message(message.chat.id, '/add 命令用法： `/add keyword=value` 。请不要包含空格。', parse_mode='Markdown')
+        elif re.search(r' ', message.text[5:]):
+            bot.send_message(message.chat.id, '请不要包含空格！')
+        else:
+            text = message.text[5:]
+            split_sen = re.split(r'=', text)
+            split_sen_dic = {split_sen[0]: split_sen[1]}
+            bot.send_message(message.chat.id, '我已经学会了,当你说{}的时候，我会回复{}'.format(split_sen[0],split_sen[1]))
+            with open('Reply.yml', 'a+', encoding='UTF-8') as reply_file:
+                reply_file.write('\n')
+                yaml.dump(split_sen_dic, reply_file, encoding='UTF-8')
 
 
-def reload(message):
-    if message.text == '是':
-        add_msg(message)
-    else:
-        pass
-# 添加程序到此处终止
-
-
-# 天气
+# 发送天气
 @bot.message_handler(commands=['weather'])
 def confirm(message):
     markup = types.ForceReply(selective=False)
@@ -156,7 +87,7 @@ def confirm(message):
 def transfer(message):
     weather.Weather.get_weather(message.text)
 
-    bot.send_message(message.chat.id, message.text+'今天的天气：\n'+weather.Weather.today)
+    bot.send_message(message.chat.id, message.text + '今天的天气：\n' + weather.Weather.today)
 
     markup = types.ReplyKeyboardMarkup()
     item_city = types.KeyboardButton('城市数据')
