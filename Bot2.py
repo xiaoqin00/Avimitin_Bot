@@ -30,7 +30,14 @@ def send_message(message):
     bot.send_message(message.chat.id, 'http://ironcloud.pw/auth/register?code=dyEL')
 
 
-@bot.message_handler(func=lambda message: True)
+def msg_filter(sentence):
+    if sentence[0] == '/':
+        return False
+    else:
+        return True
+
+
+@bot.message_handler(func=lambda message: msg_filter(message))
 def forward_all(message):
     bot.forward_message('649191333', message.from_user.id, message.message_id)
 
