@@ -138,7 +138,7 @@ def send_a_reply(message):
 msg_re = regexp_search.Msg()
 
 
-@bot.message_handler(func=lambda message: msg_re.msg_match(message))
+@bot.message_handler(func=lambda message: msg_re.msg_match(message.text))
 def reply_msg(message):
     keywords = msg_list[msg_re.count]  # 将回复列表中的键指向变量keyword
     reply_words = msg_dic[keywords]  # 通过上面的keyword键从字典中读取值
