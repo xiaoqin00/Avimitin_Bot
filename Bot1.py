@@ -24,21 +24,6 @@ msg_list = regexp_search.Msg.reply_msg_list
 msg_dic = regexp_search.reply_msg_dic
 
 
-# 查询关键词是否在字典，查询字典key对应值是否为列表，是则返回随机语句，否则直接返回key对应语句
-# 语法糖中的lambda从导入的regexp模块中查询关键词存在与否，存在返回True，不存在返回False
-@bot.message_handler(func=lambda message: regexp_search.Msg.msg_match(message.text))
-def reply_msg(message):
-    keywords = msg_list[regexp_search.Msg.print_count()]  # 将回复列表中的键指向变量keyword
-    reply_words = msg_dic[keywords]  # 通过上面的keyword键从字典中读取值
-    if type(reply_words) == list:
-        num = random.randrange(len(reply_words))
-        bot.send_chat_action(message.chat.id, 'typing')
-        bot.reply_to(message, reply_words[num])
-    else:
-        bot.send_chat_action(message.chat.id, 'typing')
-        bot.reply_to(message, reply_words)
-
-
 # 命令返回语句
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -70,10 +55,28 @@ def add_keyword(message):
             text = message.text[5:]
             split_sen = re.split(r'=', text)
             split_sen_dic = {split_sen[0]: split_sen[1]}
-            bot.send_message(message.chat.id, '我已经学会了,当你说{}的时候，我会回复{}'.format(split_sen[0],split_sen[1]))
+            bot.send_message(message.chat.id, '我已经学会了,当你说{}的时候，我会回复{}'.format(split_sen[0], split_sen[1]))
             with open('Reply.yml', 'a+', encoding='UTF-8') as reply_file:
                 reply_file.write('\n')
-                yaml.dump(split_sen_dic, reply_file, encoding='UTF-8')
+                yaml.dump(split_sen_dic, reply_file, allow_unicode=True)
+
+
+# 关键词删除程序
+@bot.message_handler(commands=['delete'])
+def del_keyword(message):
+    if message.chat.username != 'SaiToAsuKa_kksk':
+        bot.send_message(message.chat.id, '你不是我老公，爬')
+    else:
+        if len(message.text) == 7:
+            bot.send_message(message.chat.id, "/delete usage: `/delete keyword`.")
+        else:
+            text = message.text[8:]
+            with open('Reply.yml', 'r+', encoding='UTF-8') as reply_file:
+                reply_msg_dic = yaml.load(reply_file, Loader=yaml.FullLoader)
+            del reply_msg_dic[text]
+            bot.send_message(message.chat.id, '已经删除{}'.format(text))
+            with open('Reply.yml', 'w+', encoding='UTF-8') as new_file:
+                yaml.dump(reply_msg_dic, new_file, allow_unicode=True)
 
 
 # 发送天气
@@ -128,6 +131,24 @@ def send_a_reply(message):
     item_clash2 = types.InlineKeyboardButton('clash教程', url='https://avimitin.com/index.php/system/clash.html')
     markup.add(item_ssr, item_clash, item_shadowrocket, item_clash2)
     bot.send_message(message.chat.id, "请选择一个教程", reply_markup=markup)
+
+
+# 查询关键词是否在字典，查询字典key对应值是否为列表，是则返回随机语句，否则直接返回key对应语句
+# 语法糖中的lambda从导入的regexp模块中查询关键词存在与否，存在返回True，不存在返回False
+msg_re = regexp_search.Msg()
+
+
+@bot.message_handler(func=lambda message: msg_re.msg_match(message))
+def reply_msg(message):
+    keywords = msg_list[msg_re.count]  # 将回复列表中的键指向变量keyword
+    reply_words = msg_dic[keywords]  # 通过上面的keyword键从字典中读取值
+    if type(reply_words) == list:
+        num = random.randrange(len(reply_words))
+        bot.send_chat_action(message.chat.id, 'typing')
+        bot.reply_to(message, reply_words[num])
+    else:
+        bot.send_chat_action(message.chat.id, 'typing')
+        bot.reply_to(message, reply_words)
 
 
 # 轮询
