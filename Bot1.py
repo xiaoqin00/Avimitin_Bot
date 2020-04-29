@@ -9,6 +9,8 @@ import regexp_search
 import re
 import time
 import weather
+from echo_re_func import search_signal, change_word
+import psutil
 import json
 
 # 从config文件读取token
@@ -40,11 +42,43 @@ def close_menu(message):
     markup = types.ReplyKeyboardRemove(selective=False)
     bot.send_message(message.chat.id, "菜单关闭", reply_markup=markup)
 
+@bot.message_handler(commands=['groupinfo'])
+def get_info(message):
+    user_info = bot.get_chat_member(message.chat.id, message.from_user.id)
+    status = user_info.status
+    if status == 'administrator':
+        bot.send_message(message.chat.id, '管理好')
+    elif status == 'creator':
+        bot.send_message(message.chat.id, 'boss好')
+    else:
+        bot.send_message(message.chat.id, '爪巴')
+
+@bot.message_handler(commands=['sysinfo'])
+def server_info(message):
+    # 这里是系统信息
+    cpu_info = psutil.cpu_percent(interval=1, percpu=True)[0]
+    memory = psutil.virtual_memory()
+    memory_left = round(memory[1] / 1073741824, 2)
+    disk_usage = psutil.disk_usage('/')
+    disk_left = round(disk_usage[2] / 1073741824, 2)
+    # 这里是判断
+    user_info = bot.get_chat_member(message.chat.id, message.from_user.id)
+    status = user_info.status
+    allow_status = ['creator', 'administrator']
+    if status in allow_status:
+        bot.send_message(message.chat.id, 'CPU当前使用率：{}%\n'\
+        '内存使用率为:{}%\n'\
+        '剩余内存：{}GB\n'\
+        '剩余硬盘空间：{}GB\n'\
+        '硬盘空间使用率{}%\n'\
+        .format(cpu_info, memory[2], memory_left, disk_left, disk_usage[3]))
+    else:
+        bot.send_message(message.chat.id, '不要乱动指令！(╬▔皿▔)╯')
 
 # 关键词添加程序
 @bot.message_handler(commands=['add'])
 def add_keyword(message):
-    if message.chat.username != 'SaiToAsuKa_kksk':
+    if message.from_user.username != 'SaiToAsuKa_kksk':
         bot.send_message(message.chat.id, '你不是我老公，爬')
     else:
         if len(message.text) == 4:
@@ -133,6 +167,12 @@ def send_a_reply(message):
     bot.send_message(message.chat.id, "请选择一个教程", reply_markup=markup)
 
 
+# 将收到的语句处理之后返回
+@bot.message_handler(func=lambda message: search_signal(str(message.text)))
+def msg_text_replace(message):
+    bot.send_message(message.chat.id, change_word(message.text))
+
+
 # 查询关键词是否在字典，查询字典key对应值是否为列表，是则返回随机语句，否则直接返回key对应语句
 # 语法糖中的lambda从导入的regexp模块中查询关键词存在与否，存在返回True，不存在返回False
 msg_re = regexp_search.Msg()
@@ -151,5 +191,6 @@ def reply_msg(message):
         bot.reply_to(message, reply_words)
 
 
-# 轮询
-bot.polling()
+if __name__ == '__main__':
+    # 轮询
+    bot.polling()
