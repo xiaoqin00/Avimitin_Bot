@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # author: Avimitin
 # datetime: 2020/3/27 18:04
+import os
+os.path.abspath(__file__)
 import telebot
 from telebot import types
 import random
@@ -12,6 +14,8 @@ import weather
 from echo_re_func import search_signal, change_word
 import psutil
 import json
+import githubstatus
+import douban_search
 
 # 从config文件读取token
 with open("config.yaml", 'r+', encoding='UTF-8') as token_file:
@@ -102,7 +106,7 @@ def del_keyword(message):
         bot.send_message(message.chat.id, '你不是我老公，爬')
     else:
         if len(message.text) == 7:
-            bot.send_message(message.chat.id, "/delete usage: `/delete keyword`.")
+            bot.send_message(message.chat.id, "/delete usage: `/delete keyword`.", parse_mode='Markdown')
         else:
             text = message.text[8:]
             with open('Reply.yml', 'r+', encoding='UTF-8') as reply_file:
@@ -166,6 +170,27 @@ def send_a_reply(message):
     markup.add(item_ssr, item_clash, item_shadowrocket, item_clash2)
     bot.send_message(message.chat.id, "请选择一个教程", reply_markup=markup)
 
+# 输出githubstatus
+@bot.message_handler(commands=['gitstatus'])
+def send_status(message):
+    bot.send_message(message.chat.id, githubstatus.get_status())
+
+
+# 搜索豆瓣信息
+@bot.message_handler(commands=['dbsearch'])
+def send_message(message):
+    if len(message.text) == 9:
+        bot.send_message(message.chat.id, '豆瓣搜索功能用法示例：\n`/dbsearch 肖申克的救赎`', parse_mode='Markdown')
+    else:
+        name = message.text[10:]
+        result = douban_search.tv_search(name)
+        text = result[0]
+        link = result[1]
+        
+        markup = types.InlineKeyboardMarkup()
+        item = types.InlineKeyboardButton('豆瓣链接跳转', url=link)
+        markup.add(item)
+        bot.send_message(message.chat.id, text, reply_markup=markup)
 
 # 将收到的语句处理之后返回
 @bot.message_handler(func=lambda message: search_signal(str(message.text)))
