@@ -63,9 +63,9 @@ def add_keyword(message):
 # 关键词删除程序
 @bot.message_handler(commands=['delete'])
 def del_keyword(message):
-    if message.chat.username != 'example':
-        new_message = bot.send_message(message.chat.id, '爬')
-        time.sleep(120)
+    if message.from_user.username != 'SaiToAsuKa_kksk':
+        new_message = bot.send_message(message.chat.id, '你不是我老公，爬')
+        time.sleep(10)
         bot.delete_message(chat_id=new_message.chat.id, message_id=new_message.message_id)
     else:
         if len(message.text) == 7:
@@ -74,10 +74,15 @@ def del_keyword(message):
             text = message.text[8:]
             with open('config/Reply.yml', 'r+', encoding='UTF-8') as reply_file:
                 reply_msg_dic = yaml.load(reply_file, Loader=yaml.FullLoader)
-            del reply_msg_dic[text]
-            bot.send_message(message.chat.id, '已经删除{}'.format(text))
-            with open('config/Reply.yml', 'w+', encoding='UTF-8') as new_file:
-                yaml.dump(reply_msg_dic, new_file, allow_unicode=True)
+            if reply_msg_dic.get(text):
+                del reply_msg_dic[text]
+                bot.send_message(message.chat.id, '已经删除{}'.format(text))
+                with open('config/Reply.yml', 'w+', encoding='UTF-8') as new_file:
+                    yaml.dump(reply_msg_dic, new_file, allow_unicode=True)
+            else:
+                msg = bot.send_message(message.chat.id, '没有找到该关键词')
+                time.sleep(5)
+                bot.delete_message(msg.chat.id, msg.message_id)
 
 
 # 信息json处理
@@ -95,14 +100,18 @@ def dump_msg(message):
 # +--------------------------------------------------------------------------------------------+
 # 将列表赋值到简易列表,提高易读性
 re_mg = regexp_search.Msg()
-msg_list = re_mg.reply_msg_list
-msg_dic = re_mg.reply_msg_dic
 
 
 @bot.message_handler(func=lambda message: re_mg.msg_match(message.text))
 def reply_msg(message):
-    keywords = msg_list[re_mg.count]  # 将回复列表中的键指向变量keyword
-    reply_words = msg_dic[keywords]  # 通过上面的keyword键从字典中读取值
+    msg_list = re_mg.reply_msg_list
+    msg_dic = re_mg.reply_msg_dic
+
+    # 将回复列表中的键指向变量keyword
+    keywords = msg_list[re_mg.count] 
+    # 通过上面的keyword键从字典中读取值 
+    reply_words = msg_dic[keywords]
+
     if type(reply_words) == list:
         num = random.randrange(len(reply_words))
         bot.send_chat_action(message.chat.id, 'typing')
