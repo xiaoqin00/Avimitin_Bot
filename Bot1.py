@@ -98,20 +98,15 @@ def dump_msg(message):
 # 查询关键词是否在字典，查询字典key对应值是否为列表，是则返回随机语句，否则直接返回key对应语句
 # 语法糖中的lambda从导入的regexp模块中查询关键词存在与否，存在返回True，不存在返回False
 # +--------------------------------------------------------------------------------------------+
-# 将列表赋值到简易列表,提高易读性
 re_mg = regexp_search.Msg()
 
 
 @bot.message_handler(func=lambda message: re_mg.msg_match(message.text))
 def reply_msg(message):
-    msg_list = re_mg.reply_msg_list
     msg_dic = re_mg.reply_msg_dic
-
-    # 将回复列表中的键指向变量keyword
-    keywords = msg_list[re_mg.count] 
+    keyword = re_mg.keyword
     # 通过上面的keyword键从字典中读取值 
-    reply_words = msg_dic[keywords]
-
+    reply_words = msg_dic[keyword]  
     if type(reply_words) == list:
         num = random.randrange(len(reply_words))
         bot.send_chat_action(message.chat.id, 'typing')
