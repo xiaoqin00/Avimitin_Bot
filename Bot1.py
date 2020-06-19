@@ -94,6 +94,24 @@ def dump_msg(message):
     bot.delete_message(new_msg.chat.id, new_msg.message_id)
 
 
+@bot.message_handler(commands=['post'])
+def post_message(message):
+    if message.chat.type == 'supergroup':
+        if message.from_user.id == 'YOUR_TG_ID':
+            if message.reply_to_message:
+                msg = bot.send_message(message.chat.id, '正在发送投稿')
+                bot.forward_message('YOUR_CHANNEL_ID', message.chat.id, message.reply_to_message.message_id)
+                bot.edit_message_text('投稿成功', msg.chat.id, msg.message_id)
+                time.sleep(30)
+                bot.delete_message(msg.chat.id, msg.message_id)
+            else:
+                bot.send_message(message.chat.id, '请回复一个消息来投稿')
+        else:
+            bot.send_message(message.chat.id, '只有管理员可以用！再乱动我扁你')
+    else:
+        bot.send_message(message.chat.id, '请在群组里使用')
+
+
 # +--------------------------------------------------------------------------------------------+
 # 查询关键词是否在字典，查询字典key对应值是否为列表，是则返回随机语句，否则直接返回key对应语句
 # 语法糖中的lambda从导入的regexp模块中查询关键词存在与否，存在返回True，不存在返回False
